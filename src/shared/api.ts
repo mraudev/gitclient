@@ -24,6 +24,8 @@ export interface GitApi {
   stageAll(repo: string): Promise<void>
   unstageAll(repo: string): Promise<void>
   discard(repo: string, files: FileChange[]): Promise<void>
+  /** Wendet einen Patch auf den Index an (reverse = aus dem Index entfernen). Grundlage für Hunk-Staging. */
+  applyToIndex(repo: string, patch: string, reverse: boolean): Promise<void>
   commit(repo: string, message: string, amend: boolean): Promise<void>
 
   checkout(repo: string, branch: string): Promise<void>

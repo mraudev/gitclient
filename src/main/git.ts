@@ -342,6 +342,10 @@ export const gitApi: GitApi = {
     if (tracked.length) await runGit(repo, ['restore', '--worktree', '--', ...tracked])
   },
 
+  async applyToIndex(repo, patch, reverse) {
+    await runGit(repo, ['apply', '--cached', ...(reverse ? ['-R'] : []), '--whitespace=nowarn', '-'], { input: patch })
+  },
+
   async commit(repo, message, amend) {
     await runGit(repo, ['commit', '-F', '-', ...(amend ? ['--amend'] : [])], { input: message })
   },

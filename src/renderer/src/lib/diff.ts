@@ -5,6 +5,8 @@ export interface DiffLine {
   text: string
   oldNo?: number
   newNo?: number
+  /** Laufende Nummer des Hunks (nur bei normalen "@@"-Headern), passend zu extractHunkPatch */
+  hunkIndex?: number
 }
 
 /** Zerlegt eine Unified-Diff-Ausgabe von git in darstellbare Zeilen mit Zeilennummern. */
@@ -14,6 +16,7 @@ export function parseDiff(raw: string): DiffLine[] {
   let newNo = 0
   let inHunk = false
   let combined = false // "diff --cc" bei Merge-Konflikten: zwei Präfixspalten, keine Zeilennummern
+  let hunkIndex = 0
   const multiFile = (raw.match(/^diff --git /gm) ?? []).length > 1
 
   for (const line of raw.split('\n')) {
@@ -31,7 +34,7 @@ export function parseDiff(raw: string): DiffLine[] {
       oldNo = Number(hunk[1])
       newNo = Number(hunk[2])
       inHunk = true
-      result.push({ kind: 'hunk', text: line })
+      result.push({ kind: 'hunk', text: line, hunkIndex: hunkIndex++ })
       continue
     }
     if (line.startsWith('@@@ ')) {
@@ -58,4 +61,31 @@ export function parseDiff(raw: string): DiffLine[] {
     else if (line.startsWith('\\')) result.push({ kind: 'info', text: line.slice(2) })
   }
   return result
+}
+
+/**
+ * Baut aus einer git-Diff-Ausgabe einen eigenständigen Patch, der nur den Hunk Nr. `index` enthält
+ * (Datei-Header + Hunk, Zeilen unverändert inkl. evtl. "\r"), geeignet für `git apply`.
+ */
+export function extractHunkPatch(raw: string, index: number): string | null {
+  const lines = raw.split('\n')
+  let header: string[] = []
+  let inHeader = false
+  let count = -1
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (line.startsWith('diff --git ')) {
+      header = [line]
+      inHeader = true
+    } else if (line.startsWith('@@ ')) {
+      inHeader = false
+      if (++count !== index) continue
+      const body = [line]
+      for (let j = i + 1; j < lines.length && /^[ +\-\\]/.test(lines[j]); j++) body.push(lines[j])
+      return [...header, ...body].join('\n') + '\n'
+    } else if (inHeader) {
+      header.push(line)
+    }
+  }
+  return null
 }

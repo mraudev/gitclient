@@ -4,6 +4,7 @@ import type { FileChange, StatusResult } from '../../../shared/types'
 import { app, git } from '../api'
 import { discardChanges } from '../actions'
 import { notifyError } from '../dialogs'
+import { extractHunkPatch } from '../lib/diff'
 import { useRepo } from '../repoContext'
 import { DiffView } from './DiffView'
 import { FileList } from './FileList'
@@ -49,6 +50,19 @@ export function ChangesView({ status }: { status: StatusResult }) {
 
   const stage = (f: FileChange) => run('Stagen', () => git.stage(repo, [f.path]))
   const unstage = (f: FileChange) => run('Unstagen', () => git.unstage(repo, f.oldPath ? [f.oldPath, f.path] : [f.path]))
+
+  // Untracked Dateien und Konflikte haben keine anwendbaren Hunks
+  const hunkAction =
+    selectedFile && selection && diff && selectedFile.status !== '?' && selectedFile.status !== 'U'
+      ? {
+          label: selection.staged ? 'Hunk unstagen' : 'Hunk stagen',
+          onClick: (index: number) => {
+            const patch = extractHunkPatch(diff, index)
+            if (!patch) return notifyError('Hunk nicht gefunden – bitte neu laden.')
+            void run(selection.staged ? 'Hunk unstagen' : 'Hunk stagen', () => git.applyToIndex(repo, patch, selection.staged))
+          }
+        }
+      : undefined
 
   const unstagedMenu = async (f: FileChange) => {
     const choice = await app.contextMenu([
@@ -156,6 +170,7 @@ export function ChangesView({ status }: { status: StatusResult }) {
       <DiffView
         diff={selectedFile ? diff : null}
         title={selectedFile ? `${selectedFile.path}${selection?.staged ? ' (gestagt)' : ''}` : undefined}
+        hunkAction={hunkAction}
         emptyText={status.staged.length + status.unstaged.length ? 'Datei auswählen, um die Änderungen zu sehen' : 'Keine lokalen Änderungen'}
       />
     </Split>

@@ -876,6 +876,18 @@ button.icon.inline {
   margin-top: 4px;
 }
 
+.diff-line.hunk {
+  align-items: center;
+}
+
+.hunk-action {
+  position: sticky;
+  right: 8px;
+  flex: none;
+  margin: 2px 0;
+  font-family: var(--font);
+}
+
 .diff-line.file {
   background: var(--bg-panel);
   font-weight: 600;
