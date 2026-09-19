@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { FileChange } from '../../../shared/types'
-import { splitPath, statusLabel } from '../lib/format'
+import { t } from '../i18n'
+import { splitPath } from '../lib/format'
 
 interface Props {
   files: FileChange[]
@@ -30,7 +31,7 @@ export function FileList({ files, selectedPath, onSelect, onDoubleClick, onConte
               onContextMenu?.(f)
             }}
           >
-            <span className={`status-badge s-${f.status === '?' ? 'N' : f.status}`} title={statusLabel[f.status]}>
+            <span className={`status-badge s-${f.status === '?' ? 'N' : f.status}`} title={t.status[f.status]}>
               {f.status === '?' ? '+' : f.status}
             </span>
             <span className="file-name">{name}</span>

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { FolderGit2, FolderOpen, X } from 'lucide-react'
+import { FolderGit2, FolderOpen, Settings, X } from 'lucide-react'
 import type { RepoInfo } from '../../../shared/types'
 import { app } from '../api'
 import { notifyError } from '../dialogs'
+import { showLanguageMenu, t } from '../i18n'
 
 export function Welcome({ onOpen }: { onOpen(path: string): void }) {
   const [recent, setRecent] = useState<RepoInfo[]>([])
@@ -27,14 +28,17 @@ export function Welcome({ onOpen }: { onOpen(path: string): void }) {
 
   return (
     <div className="welcome">
+      <button className="icon welcome-settings" onClick={showLanguageMenu} title={t.common.settings}>
+        <Settings size={18} />
+      </button>
       <div className="welcome-card">
         <h1>Git Client</h1>
         <button className="primary big" onClick={openDialog}>
-          <FolderOpen size={18} /> Repository öffnen…
+          <FolderOpen size={18} /> {t.common.openRepoEllipsis}
         </button>
         {recent.length > 0 && (
           <>
-            <div className="section-title">Zuletzt geöffnet</div>
+            <div className="section-title">{t.welcome.recent}</div>
             <div className="recent-list">
               {recent.map((r) => (
                 <div key={r.path} className="recent-row" onClick={() => onOpen(r.path)}>
@@ -45,7 +49,7 @@ export function Welcome({ onOpen }: { onOpen(path: string): void }) {
                   </div>
                   <button
                     className="icon row-action"
-                    title="Aus der Liste entfernen"
+                    title={t.welcome.removeFromList}
                     onClick={(e) => {
                       e.stopPropagation()
                       void remove(r.path)

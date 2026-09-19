@@ -1,24 +1,19 @@
-import type { FileStatus } from '../../../shared/types'
+import { dateLocale } from '../i18n'
 
-const dateFmt = new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short' })
+const dateFormats = new Map<string, Intl.DateTimeFormat>()
 
 export function formatDate(ms: number): string {
-  return dateFmt.format(new Date(ms))
+  const locale = dateLocale()
+  let fmt = dateFormats.get(locale)
+  if (!fmt) {
+    fmt = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' })
+    dateFormats.set(locale, fmt)
+  }
+  return fmt.format(new Date(ms))
 }
 
 export function shortHash(hash: string): string {
   return hash.slice(0, 7)
-}
-
-export const statusLabel: Record<FileStatus, string> = {
-  A: 'Hinzugefügt',
-  M: 'Geändert',
-  D: 'Gelöscht',
-  R: 'Umbenannt',
-  C: 'Kopiert',
-  T: 'Typ geändert',
-  U: 'Konflikt',
-  '?': 'Neu (untracked)'
 }
 
 export function splitPath(p: string): { name: string; dir: string } {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Commit, RefLabel } from '../../../shared/types'
 import type { GraphLayout, GraphRow } from '../lib/graph'
+import { t } from '../i18n'
 import { formatDate, shortHash } from '../lib/format'
 
 const ROW = 26
@@ -90,13 +91,13 @@ export function CommitList({ commits, graph, selectedHash, onSelect, onContextMe
   return (
     <div className="commit-list">
       <div className="commit-header">
-        <span className="col-subject">Beschreibung</span>
-        <span className="col-author">Autor</span>
-        <span className="col-date">Datum</span>
-        <span className="col-hash">Commit</span>
+        <span className="col-subject">{t.history.description}</span>
+        <span className="col-author">{t.history.author}</span>
+        <span className="col-date">{t.history.date}</span>
+        <span className="col-hash">{t.history.commit}</span>
       </div>
       <div className="commit-scroll" ref={scroller} tabIndex={0} onKeyDown={onKeyDown} onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}>
-        {commits.length === 0 && <div className="placeholder">Noch keine Commits</div>}
+        {commits.length === 0 && <div className="placeholder">{t.history.noCommits}</div>}
         <div style={{ height: commits.length * ROW + (hasMore ? 40 : 0), position: 'relative' }}>
           {commits.slice(first, last).map((c, i) => {
             const index = first + i
@@ -129,7 +130,7 @@ export function CommitList({ commits, graph, selectedHash, onSelect, onContextMe
           })}
           {hasMore && (
             <div className="load-more" style={{ top: commits.length * ROW }}>
-              <button onClick={onLoadMore}>Weitere Commits laden</button>
+              <button onClick={onLoadMore}>{t.history.loadMore}</button>
             </div>
           )}
         </div>

@@ -3,6 +3,7 @@ import { Copy } from 'lucide-react'
 import type { CommitDetails as Details, FileChange } from '../../../shared/types'
 import { git } from '../api'
 import { notify, notifyError } from '../dialogs'
+import { t } from '../i18n'
 import { formatDate, shortHash } from '../lib/format'
 import { useRepo } from '../repoContext'
 import { DiffView } from './DiffView'
@@ -45,11 +46,11 @@ export function CommitDetails({ hash }: { hash: string }) {
     }
   }, [repo, hash, file])
 
-  if (!details) return <div className="placeholder">Lade Commit…</div>
+  if (!details) return <div className="placeholder">{t.details.loading}</div>
 
   const copyHash = () => {
     void navigator.clipboard.writeText(details.hash)
-    notify('Hash kopiert')
+    notify(t.common.hashCopied)
   }
 
   return (
@@ -61,7 +62,7 @@ export function CommitDetails({ hash }: { hash: string }) {
           <table className="meta">
             <tbody>
               <tr>
-                <th>Autor</th>
+                <th>{t.details.author}</th>
                 <td>
                   {details.author} &lt;{details.email}&gt;
                   <div className="dim">{formatDate(details.date)}</div>
@@ -69,7 +70,7 @@ export function CommitDetails({ hash }: { hash: string }) {
               </tr>
               {(details.committer !== details.author || details.committerDate !== details.date) && (
                 <tr>
-                  <th>Committer</th>
+                  <th>{t.details.committer}</th>
                   <td>
                     {details.committer}
                     <div className="dim">{formatDate(details.committerDate)}</div>
@@ -77,17 +78,17 @@ export function CommitDetails({ hash }: { hash: string }) {
                 </tr>
               )}
               <tr>
-                <th>Commit</th>
+                <th>{t.details.commit}</th>
                 <td>
                   <span className="mono">{shortHash(details.hash)}</span>
-                  <button className="icon inline" title="Vollständigen Hash kopieren" onClick={copyHash}>
+                  <button className="icon inline" title={t.details.copyFullHash} onClick={copyHash}>
                     <Copy size={12} />
                   </button>
                 </td>
               </tr>
               {details.parents.length > 0 && (
                 <tr>
-                  <th>Eltern</th>
+                  <th>{t.details.parents}</th>
                   <td>
                     {details.parents.map((p) => (
                       <a key={p} className="mono link" onClick={() => jumpTo(p)}>
@@ -100,10 +101,10 @@ export function CommitDetails({ hash }: { hash: string }) {
             </tbody>
           </table>
         </div>
-        <div className="section-title">{details.files.length} geänderte Dateien</div>
+        <div className="section-title">{t.details.changedFiles(details.files.length)}</div>
         <FileList files={details.files} selectedPath={file?.path} onSelect={setFile} />
       </div>
-      <DiffView diff={file ? diff : null} title={file?.path} emptyText={details.files.length ? 'Lade Diff…' : 'Keine Dateien geändert'} />
+      <DiffView diff={file ? diff : null} title={file?.path} emptyText={details.files.length ? t.details.loadingDiff : t.details.noFiles} />
     </Split>
   )
 }

@@ -4,6 +4,7 @@ import type { FileChange, StatusResult } from '../../../shared/types'
 import { app, git } from '../api'
 import { discardChanges, discardHunk } from '../actions'
 import { notifyError } from '../dialogs'
+import { t } from '../i18n'
 import { extractHunkPatch } from '../lib/diff'
 import { useRepo } from '../repoContext'
 import { DiffView, type HunkAction } from './DiffView'
@@ -48,43 +49,44 @@ export function ChangesView({ status }: { status: StatusResult }) {
     }
   }, [repo, status, selection?.path, selection?.staged])
 
-  const stage = (f: FileChange) => run('Stagen', () => git.stage(repo, [f.path]))
-  const unstage = (f: FileChange) => run('Unstagen', () => git.unstage(repo, f.oldPath ? [f.oldPath, f.path] : [f.path]))
+  const stage = (f: FileChange) => run(t.busy.stage, () => git.stage(repo, [f.path]))
+  const unstage = (f: FileChange) => run(t.busy.unstage, () => git.unstage(repo, f.oldPath ? [f.oldPath, f.path] : [f.path]))
 
-  // Untracked Dateien und Konflikte haben keine anwendbaren Hunks
-  const withHunk = (label: string, fn: (patch: string) => Promise<unknown>) => (index: number) => {
-    const patch = diff && extractHunkPatch(diff, index)
-    if (!patch) return notifyError('Hunk nicht gefunden – bitte neu laden.')
+  // Teil-Patches aus dem angezeigten Diff; untracked Dateien und Konflikte haben keine anwendbaren Hunks
+  const withPatch = (label: string, patch: string | null, fn: (patch: string) => Promise<unknown>) => {
+    if (!patch) return notifyError(t.changes.changeNotFound)
     void run(label, () => fn(patch))
   }
 
   let hunkActions: HunkAction[] | undefined
   if (selectedFile && selection && diff && selectedFile.status !== '?' && selectedFile.status !== 'U') {
+    const path = selectedFile.path
+    const hunk = (i: number) => extractHunkPatch(diff, i)
     hunkActions = selection.staged
-      ? [{ label: 'Hunk unstagen', onClick: withHunk('Hunk unstagen', (p) => git.applyToIndex(repo, p, true)) }]
+      ? [{ label: t.buttons.unstageHunk, onClick: (i) => withPatch(t.busy.unstageHunk, hunk(i), (p) => git.applyToIndex(repo, p, true)) }]
       : [
-          { label: 'Verwerfen', danger: true, onClick: withHunk('Hunk verwerfen', (p) => discardHunk(repo, selectedFile.path, p)) },
-          { label: 'Hunk stagen', onClick: withHunk('Hunk stagen', (p) => git.applyToIndex(repo, p, false)) }
+          { label: t.common.discard, danger: true, onClick: (i) => withPatch(t.busy.discardHunk, hunk(i), (p) => discardHunk(repo, path, p)) },
+          { label: t.buttons.stageHunk, onClick: (i) => withPatch(t.busy.stageHunk, hunk(i), (p) => git.applyToIndex(repo, p, false)) }
         ]
   }
 
   const unstagedMenu = async (f: FileChange) => {
     const choice = await app.contextMenu([
-      { id: 'stage', label: f.status === 'U' ? 'Als gelöst markieren (stagen)' : 'Stagen' },
-      { id: 'discard', label: 'Änderungen verwerfen…', enabled: f.status !== 'U' },
+      { id: 'stage', label: f.status === 'U' ? t.changes.markResolved : t.buttons.stage },
+      { id: 'discard', label: t.changes.discardChangesEllipsis, enabled: f.status !== 'U' },
       { type: 'separator' },
-      { id: 'show', label: 'Im Explorer anzeigen', enabled: f.status !== 'D' }
+      { id: 'show', label: t.common.showInExplorer, enabled: f.status !== 'D' }
     ])
     if (choice === 'stage') void stage(f)
-    if (choice === 'discard') void run('Verwerfen', () => discardChanges(repo, [f]))
+    if (choice === 'discard') void run(t.busy.discard, () => discardChanges(repo, [f]))
     if (choice === 'show') void app.showInFolder(`${repo}/${f.path}`)
   }
 
   const stagedMenu = async (f: FileChange) => {
     const choice = await app.contextMenu([
-      { id: 'unstage', label: 'Unstagen' },
+      { id: 'unstage', label: t.buttons.unstage },
       { type: 'separator' },
-      { id: 'show', label: 'Im Explorer anzeigen', enabled: f.status !== 'D' }
+      { id: 'show', label: t.common.showInExplorer, enabled: f.status !== 'D' }
     ])
     if (choice === 'unstage') void unstage(f)
     if (choice === 'show') void app.showInFolder(`${repo}/${f.path}`)
@@ -119,10 +121,10 @@ export function ChangesView({ status }: { status: StatusResult }) {
         <Split direction="column" initial={300} storageKey="changes-lists" min={80}>
           <div className="file-section">
             <div className="section-title">
-              <span>Nicht gestagt ({status.unstaged.length})</span>
-              {conflicts > 0 && <span className="conflict-hint">{conflicts} Konflikt(e)</span>}
-              <button className="small" disabled={!status.unstaged.length} onClick={() => run('Alle stagen', () => git.stageAll(repo))}>
-                Alle stagen
+              <span>{t.changes.unstaged(status.unstaged.length)}</span>
+              {conflicts > 0 && <span className="conflict-hint">{t.changes.conflicts(conflicts)}</span>}
+              <button className="small" disabled={!status.unstaged.length} onClick={() => run(t.busy.stageAll, () => git.stageAll(repo))}>
+                {t.buttons.stageAll}
               </button>
             </div>
             <FileList
@@ -131,14 +133,14 @@ export function ChangesView({ status }: { status: StatusResult }) {
               onSelect={(f) => setSelection({ path: f.path, staged: false })}
               onDoubleClick={stage}
               onContextMenu={unstagedMenu}
-              action={{ icon: <ArrowDownToLine size={14} />, title: 'Stagen', onClick: stage }}
+              action={{ icon: <ArrowDownToLine size={14} />, title: t.buttons.stage, onClick: stage }}
             />
           </div>
           <div className="file-section">
             <div className="section-title">
-              <span>Gestagt ({status.staged.length})</span>
-              <button className="small" disabled={!status.staged.length} onClick={() => run('Alle unstagen', () => git.unstageAll(repo))}>
-                Alle unstagen
+              <span>{t.changes.staged(status.staged.length)}</span>
+              <button className="small" disabled={!status.staged.length} onClick={() => run(t.busy.unstageAll, () => git.unstageAll(repo))}>
+                {t.buttons.unstageAll}
               </button>
             </div>
             <FileList
@@ -147,14 +149,14 @@ export function ChangesView({ status }: { status: StatusResult }) {
               onSelect={(f) => setSelection({ path: f.path, staged: true })}
               onDoubleClick={unstage}
               onContextMenu={stagedMenu}
-              action={{ icon: <ArrowUpFromLine size={14} />, title: 'Unstagen', onClick: unstage }}
+              action={{ icon: <ArrowUpFromLine size={14} />, title: t.buttons.unstage, onClick: unstage }}
             />
           </div>
         </Split>
         <div className="commit-box">
           <textarea
             value={message}
-            placeholder="Commit-Nachricht (Strg+Enter zum Committen)"
+            placeholder={t.changes.commitPlaceholder}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && e.ctrlKey) commit()
@@ -163,7 +165,7 @@ export function ChangesView({ status }: { status: StatusResult }) {
           <div className="commit-actions">
             <label className="checkbox">
               <input type="checkbox" checked={amend} onChange={(e) => toggleAmend(e.target.checked)} />
-              Letzten Commit ändern (amend)
+              {t.changes.amend}
             </label>
             <button className="primary" disabled={!canCommit} onClick={commit}>
               {amend ? 'Amend' : `Commit${status.staged.length ? ` (${status.staged.length})` : ''}`}
@@ -173,9 +175,9 @@ export function ChangesView({ status }: { status: StatusResult }) {
       </div>
       <DiffView
         diff={selectedFile ? diff : null}
-        title={selectedFile ? `${selectedFile.path}${selection?.staged ? ' (gestagt)' : ''}` : undefined}
+        title={selectedFile ? `${selectedFile.path}${selection?.staged ? t.changes.stagedSuffix : ''}` : undefined}
         hunkActions={hunkActions}
-        emptyText={status.staged.length + status.unstaged.length ? 'Datei auswählen, um die Änderungen zu sehen' : 'Keine lokalen Änderungen'}
+        emptyText={status.staged.length + status.unstaged.length ? t.changes.selectFile : t.changes.noChanges}
       />
     </Split>
   )

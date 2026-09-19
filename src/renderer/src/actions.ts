@@ -1,15 +1,16 @@
 import { app, git } from './api'
 import { prompt, validateBranchName } from './dialogs'
+import { t } from './i18n'
 import { errorMessage } from './lib/format'
 import type { FileChange, Stash } from '../../shared/types'
 
 export async function createBranch(repo: string, startPoint: string, startLabel: string): Promise<void> {
   const r = await prompt({
-    title: 'Neuer Branch',
-    label: `Name (Startpunkt: ${startLabel})`,
-    placeholder: 'feature/mein-branch',
-    confirmLabel: 'Erstellen',
-    checkbox: { label: 'Nach dem Erstellen auschecken', defaultChecked: true },
+    title: t.dialogs.newBranch,
+    label: t.dialogs.nameWithStart(startLabel),
+    placeholder: t.dialogs.branchPlaceholder,
+    confirmLabel: t.dialogs.create,
+    checkbox: { label: t.dialogs.checkoutAfterCreate, defaultChecked: true },
     validate: validateBranchName
   })
   if (r) await git.createBranch(repo, r.value, startPoint, r.checked)
@@ -17,25 +18,25 @@ export async function createBranch(repo: string, startPoint: string, startLabel:
 
 export async function renameBranch(repo: string, name: string): Promise<void> {
   const r = await prompt({
-    title: 'Branch umbenennen',
-    label: 'Neuer Name',
+    title: t.dialogs.renameBranch,
+    label: t.dialogs.newName,
     defaultValue: name,
-    confirmLabel: 'Umbenennen',
+    confirmLabel: t.common.rename,
     validate: validateBranchName
   })
   if (r && r.value !== name) await git.renameBranch(repo, name, r.value)
 }
 
 export async function deleteBranch(repo: string, name: string): Promise<void> {
-  const ok = await app.confirm({ message: `Branch "${name}" löschen?`, confirmLabel: 'Löschen' })
+  const ok = await app.confirm({ message: t.dialogs.deleteBranch(name), confirmLabel: t.common.delete })
   if (!ok) return
   try {
     await git.deleteBranch(repo, name, false)
   } catch (e) {
     const force = await app.confirm({
-      message: `Branch "${name}" konnte nicht gelöscht werden.`,
-      detail: `${errorMessage(e)}\n\nDabei können Commits verloren gehen, die in keinem anderen Branch enthalten sind.`,
-      confirmLabel: 'Löschen erzwingen'
+      message: t.dialogs.deleteBranchFailed(name),
+      detail: t.dialogs.deleteBranchForceDetail(errorMessage(e)),
+      confirmLabel: t.dialogs.forceDelete
     })
     if (force) await git.deleteBranch(repo, name, true)
   }
@@ -43,42 +44,42 @@ export async function deleteBranch(repo: string, name: string): Promise<void> {
 
 export async function deleteRemoteBranch(repo: string, name: string, remote: string): Promise<void> {
   const ok = await app.confirm({
-    message: `Remote-Branch "${name}" löschen?`,
-    detail: `Der Branch wird auf "${remote}" gelöscht und ist danach für alle entfernt.`,
-    confirmLabel: 'Auf Remote löschen'
+    message: t.dialogs.deleteRemoteBranch(name),
+    detail: t.dialogs.deleteRemoteBranchDetail(remote),
+    confirmLabel: t.dialogs.deleteOnRemote
   })
   if (ok) await git.deleteRemoteBranch(repo, name, remote)
 }
 
 export async function saveStash(repo: string): Promise<void> {
   const r = await prompt({
-    title: 'Änderungen stashen',
-    label: 'Nachricht (optional)',
-    confirmLabel: 'Stashen',
-    checkbox: { label: 'Untracked Dateien einschließen', defaultChecked: true }
+    title: t.dialogs.stashChanges,
+    label: t.dialogs.messageOptional,
+    confirmLabel: t.dialogs.stash,
+    checkbox: { label: t.dialogs.includeUntracked, defaultChecked: true }
   })
   if (r) await git.stashSave(repo, r.value, r.checked)
 }
 
 export async function dropStash(repo: string, stash: Stash): Promise<void> {
-  const ok = await app.confirm({ message: `Stash "${stash.message}" löschen?`, confirmLabel: 'Löschen' })
+  const ok = await app.confirm({ message: t.dialogs.dropStash(stash.message), confirmLabel: t.common.delete })
   if (ok) await git.stashDrop(repo, stash.ref)
 }
 
 export async function discardChanges(repo: string, files: FileChange[]): Promise<void> {
   const ok = await app.confirm({
-    message: files.length === 1 ? `Änderungen an "${files[0].path}" verwerfen?` : `Änderungen an ${files.length} Dateien verwerfen?`,
-    detail: 'Das kann nicht rückgängig gemacht werden.',
-    confirmLabel: 'Verwerfen'
+    message: files.length === 1 ? t.dialogs.discardFile(files[0].path) : t.dialogs.discardFiles(files.length),
+    detail: t.dialogs.cannotUndo,
+    confirmLabel: t.common.discard
   })
   if (ok) await git.discard(repo, files)
 }
 
 export async function discardHunk(repo: string, path: string, patch: string): Promise<void> {
   const ok = await app.confirm({
-    message: `Diesen Hunk in "${path}" verwerfen?`,
-    detail: 'Die Änderung wird aus der Datei entfernt. Das kann nicht rückgängig gemacht werden.',
-    confirmLabel: 'Verwerfen'
+    message: t.dialogs.discardHunk(path),
+    detail: t.dialogs.discardHunkDetail,
+    confirmLabel: t.common.discard
   })
   if (ok) await git.discardPatch(repo, patch)
 }

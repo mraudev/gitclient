@@ -31,4 +31,8 @@ src/
     src/components/     Toolbar, Sidebar, CommitList, CommitDetails, ChangesView, DiffView …
 ```
 
+Sprachen: Englisch (Standard) und Deutsch, umschaltbar über das Zahnrad in der Toolbar bzw. auf der Startseite.
+Texte stehen in `src/renderer/src/i18n.ts` (Oberfläche) und `src/main/i18n.ts` (Dialoge/Fehler des Hauptprozesses).
+Neue Texte zuerst im deutschen Wörterbuch anlegen – der Typecheck meldet dann, wo die englische Fassung fehlt.
+
 Neue Git-Funktion: Signatur in `src/shared/api.ts` ergänzen → in `gitApi` (`src/main/git.ts`) implementieren → im Renderer über `git.<name>(repo, …)` aufrufen. Die IPC-Registrierung passiert automatisch.

@@ -3,6 +3,7 @@ import type { Commit, Refs, RepoInfo, StatusResult } from '../../../shared/types
 import { app, git } from '../api'
 import { createBranch } from '../actions'
 import { notify, notifyError } from '../dialogs'
+import { t } from '../i18n'
 import { computeGraph } from '../lib/graph'
 import { shortHash } from '../lib/format'
 import { RepoContext, type RepoCtx, type View } from '../repoContext'
@@ -84,7 +85,7 @@ export function RepoView({ repo, openRepo }: { repo: RepoInfo; openRepo(path: st
     (hash: string) => {
       setView({ kind: 'history' })
       setSelectedHash(hash)
-      if (!commits.some((c) => c.hash === hash)) notify(`Commit ${shortHash(hash)} ist nicht in den geladenen Commits enthalten.`)
+      if (!commits.some((c) => c.hash === hash)) notify(t.history.notLoaded(shortHash(hash)))
     },
     [commits]
   )
@@ -93,20 +94,20 @@ export function RepoView({ repo, openRepo }: { repo: RepoInfo; openRepo(path: st
 
   const commitMenu = async (c: Commit) => {
     const choice = await app.contextMenu([
-      { id: 'branch', label: 'Neuer Branch von hier…' },
-      { id: 'checkout', label: 'Auschecken (detached HEAD)' },
+      { id: 'branch', label: t.common.newBranchHere },
+      { id: 'checkout', label: t.common.checkoutDetached },
       { type: 'separator' },
-      { id: 'copy', label: 'Hash kopieren' }
+      { id: 'copy', label: t.history.copyHash }
     ])
-    if (choice === 'branch') void run('Branch erstellen', () => createBranch(repo.path, c.hash, shortHash(c.hash)))
+    if (choice === 'branch') void run(t.busy.createBranch, () => createBranch(repo.path, c.hash, shortHash(c.hash)))
     if (choice === 'checkout') void run(`Checkout ${shortHash(c.hash)}`, () => git.checkoutDetached(repo.path, c.hash))
     if (choice === 'copy') {
       void navigator.clipboard.writeText(c.hash)
-      notify('Hash kopiert')
+      notify(t.common.hashCopied)
     }
   }
 
-  if (!status || !refs) return <div className="placeholder full">Lade Repository…</div>
+  if (!status || !refs) return <div className="placeholder full">{t.history.loadingRepo}</div>
 
   let content
   if (view.kind === 'changes') {
@@ -132,7 +133,7 @@ export function RepoView({ repo, openRepo }: { repo: RepoInfo; openRepo(path: st
           hasMore={commits.length >= limit}
           onLoadMore={() => setLimit((l) => l + PAGE)}
         />
-        {selectedHash ? <CommitDetails hash={selectedHash} /> : <div className="placeholder">Commit auswählen</div>}
+        {selectedHash ? <CommitDetails hash={selectedHash} /> : <div className="placeholder">{t.history.selectCommit}</div>}
       </Split>
     )
   }

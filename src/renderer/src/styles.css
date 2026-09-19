@@ -928,10 +928,17 @@ button.danger:hover:not(:disabled) {
 /* ---------- Willkommen ---------- */
 
 .welcome {
+  position: relative;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.welcome-settings {
+  position: absolute;
+  top: 10px;
+  right: 10px;
 }
 
 .welcome-card {

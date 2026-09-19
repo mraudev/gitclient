@@ -1,8 +1,9 @@
-import { Archive, ArrowDown, ArrowUp, ChevronDown, FolderGit2, GitBranch, Loader2, RefreshCw, CloudDownload } from 'lucide-react'
+import { Archive, ArrowDown, ArrowUp, ChevronDown, FolderGit2, GitBranch, Loader2, RefreshCw, CloudDownload, Settings } from 'lucide-react'
 import type { StatusResult } from '../../../shared/types'
 import { app, git } from '../api'
 import { createBranch, saveStash } from '../actions'
 import { notifyError } from '../dialogs'
+import { showLanguageMenu, t } from '../i18n'
 import { useRepo } from '../repoContext'
 
 interface Props {
@@ -21,8 +22,8 @@ export function Toolbar({ repoName, status, busy, onRefresh }: Props) {
     const choice = await app.contextMenu([
       ...recent.map((r) => ({ id: `open:${r.path}`, label: `${r.name}  —  ${r.path}` })),
       ...(recent.length ? [{ type: 'separator' as const }] : []),
-      { id: 'dialog', label: 'Repository öffnen…' },
-      { id: 'show', label: 'Im Explorer anzeigen' }
+      { id: 'dialog', label: t.common.openRepoEllipsis },
+      { id: 'show', label: t.common.showInExplorer }
     ])
     if (choice?.startsWith('open:')) openRepo(choice.slice(5))
     if (choice === 'show') void app.showInFolder(repo)
@@ -45,13 +46,13 @@ export function Toolbar({ repoName, status, busy, onRefresh }: Props) {
         <span className="repo-name">{repoName}</span>
         <ChevronDown size={14} />
       </button>
-      <div className="head-info" title={status.upstream ? `Upstream: ${status.upstream}` : 'Kein Upstream'}>
+      <div className="head-info" title={status.upstream ? t.toolbar.upstream(status.upstream) : t.toolbar.noUpstream}>
         <GitBranch size={14} />
         <span>{head}</span>
       </div>
 
       <div className="tool-group">
-        <button className="tool" disabled={!!busy} onClick={() => run('Fetch', () => git.fetch(repo))} title="Alle Remotes abrufen (fetch --all --prune)">
+        <button className="tool" disabled={!!busy} onClick={() => run('Fetch', () => git.fetch(repo))} title={t.toolbar.fetchTitle}>
           <CloudDownload size={18} />
           <span>Fetch</span>
         </button>
@@ -66,11 +67,11 @@ export function Toolbar({ repoName, status, busy, onRefresh }: Props) {
       </div>
 
       <div className="tool-group">
-        <button className="tool" disabled={!!busy} onClick={() => run('Branch erstellen', () => createBranch(repo, 'HEAD', head))} title="Neuen Branch vom aktuellen Stand erstellen">
+        <button className="tool" disabled={!!busy} onClick={() => run(t.busy.createBranch, () => createBranch(repo, 'HEAD', head))} title={t.toolbar.branchTitle}>
           <GitBranch size={18} />
           <span>Branch</span>
         </button>
-        <button className="tool" disabled={!!busy || !hasChanges} onClick={() => run('Stash', () => saveStash(repo))} title="Lokale Änderungen stashen">
+        <button className="tool" disabled={!!busy || !hasChanges} onClick={() => run('Stash', () => saveStash(repo))} title={t.toolbar.stashTitle}>
           <Archive size={18} />
           <span>Stash</span>
         </button>
@@ -83,8 +84,11 @@ export function Toolbar({ repoName, status, busy, onRefresh }: Props) {
           {busy}…
         </div>
       )}
-      <button className="icon" onClick={onRefresh} title="Aktualisieren (F5)">
+      <button className="icon" onClick={onRefresh} title={t.toolbar.refresh}>
         <RefreshCw size={16} />
+      </button>
+      <button className="icon" onClick={showLanguageMenu} title={t.common.settings}>
+        <Settings size={16} />
       </button>
     </div>
   )

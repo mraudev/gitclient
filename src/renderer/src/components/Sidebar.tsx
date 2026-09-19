@@ -3,6 +3,7 @@ import { Archive, ChevronDown, ChevronRight, Cloud, FileDiff, Folder, FolderGit2
 import type { Branch, Refs, Stash, StatusResult, Tag, Worktree } from '../../../shared/types'
 import { app, git } from '../api'
 import { createBranch, deleteBranch, deleteRemoteBranch, dropStash, renameBranch } from '../actions'
+import { t } from '../i18n'
 import { useRepo, type View } from '../repoContext'
 
 // ---------- Baumstruktur für Branches mit "/" ----------
@@ -86,10 +87,10 @@ function Section({ title, count, open, onToggle, children }: { title: string; co
 }
 
 function TrackInfo({ branch }: { branch: Branch }) {
-  if (branch.gone) return <span className="track gone" title="Upstream existiert nicht mehr">gone</span>
+  if (branch.gone) return <span className="track gone" title={t.sidebar.upstreamGone}>gone</span>
   if (!branch.ahead && !branch.behind) return null
   return (
-    <span className="track" title={`${branch.ahead} voraus, ${branch.behind} zurück gegenüber ${branch.upstream}`}>
+    <span className="track" title={t.sidebar.track(branch.ahead, branch.behind, branch.upstream ?? '')}>
       {branch.ahead > 0 && `↑${branch.ahead}`}
       {branch.behind > 0 && ` ↓${branch.behind}`}
     </span>
@@ -132,7 +133,7 @@ export function Sidebar({ refs, status, view, onView }: Props) {
   const f = filter.toLowerCase()
   const match = (name: string) => name.toLowerCase().includes(f)
   const localTree = useMemo(() => buildTree(refs.local.filter((b) => match(b.name)), (b) => b.name, 'local'), [refs.local, f])
-  const tags = refs.tags.filter((t) => match(t.name))
+  const tags = refs.tags.filter((tag) => match(tag.name))
   const stashes = refs.stashes.filter((s) => match(s.message))
   const changeCount = status.staged.length + status.unstaged.length
 
@@ -140,52 +141,52 @@ export function Sidebar({ refs, status, view, onView }: Props) {
 
   const localMenu = async (b: Branch) => {
     const choice = await app.contextMenu([
-      { id: 'checkout', label: 'Auschecken', enabled: !b.isHead },
-      { id: 'branch', label: 'Neuer Branch von hier…' },
+      { id: 'checkout', label: t.common.checkout, enabled: !b.isHead },
+      { id: 'branch', label: t.common.newBranchHere },
       { type: 'separator' },
-      { id: 'rename', label: 'Umbenennen…' },
-      { id: 'delete', label: 'Löschen…', enabled: !b.isHead }
+      { id: 'rename', label: t.common.renameEllipsis },
+      { id: 'delete', label: t.common.deleteEllipsis, enabled: !b.isHead }
     ])
     if (choice === 'checkout') void run(`Checkout ${b.name}`, () => git.checkout(repo, b.name))
-    if (choice === 'branch') void run('Branch erstellen', () => createBranch(repo, b.name, b.name))
-    if (choice === 'rename') void run('Umbenennen', () => renameBranch(repo, b.name))
-    if (choice === 'delete') void run('Löschen', () => deleteBranch(repo, b.name))
+    if (choice === 'branch') void run(t.busy.createBranch, () => createBranch(repo, b.name, b.name))
+    if (choice === 'rename') void run(t.busy.rename, () => renameBranch(repo, b.name))
+    if (choice === 'delete') void run(t.busy.delete, () => deleteBranch(repo, b.name))
   }
 
   const checkoutRemote = (b: Branch) => run(`Checkout ${b.name}`, () => git.checkoutRemote(repo, b.name, b.remote!))
 
   const remoteMenu = async (b: Branch) => {
     const choice = await app.contextMenu([
-      { id: 'checkout', label: 'Auschecken (lokalen Branch anlegen)' },
-      { id: 'branch', label: 'Neuer Branch von hier…' },
+      { id: 'checkout', label: t.sidebar.checkoutCreateLocal },
+      { id: 'branch', label: t.common.newBranchHere },
       { type: 'separator' },
-      { id: 'delete', label: `Auf ${b.remote} löschen…` }
+      { id: 'delete', label: t.sidebar.deleteOnRemote(b.remote!) }
     ])
     if (choice === 'checkout') void checkoutRemote(b)
-    if (choice === 'branch') void run('Branch erstellen', () => createBranch(repo, b.name, b.name))
-    if (choice === 'delete') void run('Remote-Branch löschen', () => deleteRemoteBranch(repo, b.name, b.remote!))
+    if (choice === 'branch') void run(t.busy.createBranch, () => createBranch(repo, b.name, b.name))
+    if (choice === 'delete') void run(t.busy.deleteRemoteBranch, () => deleteRemoteBranch(repo, b.name, b.remote!))
   }
 
-  const tagMenu = async (t: Tag) => {
+  const tagMenu = async (tag: Tag) => {
     const choice = await app.contextMenu([
-      { id: 'checkout', label: 'Auschecken (detached HEAD)' },
-      { id: 'branch', label: 'Neuer Branch von hier…' }
+      { id: 'checkout', label: t.common.checkoutDetached },
+      { id: 'branch', label: t.common.newBranchHere }
     ])
-    if (choice === 'checkout') void run(`Checkout ${t.name}`, () => git.checkoutDetached(repo, t.name))
-    if (choice === 'branch') void run('Branch erstellen', () => createBranch(repo, t.name, t.name))
+    if (choice === 'checkout') void run(`Checkout ${tag.name}`, () => git.checkoutDetached(repo, tag.name))
+    if (choice === 'branch') void run(t.busy.createBranch, () => createBranch(repo, tag.name, tag.name))
   }
 
   const stashMenu = async (s: Stash) => {
     const choice = await app.contextMenu([
-      { id: 'apply', label: 'Anwenden' },
-      { id: 'pop', label: 'Anwenden und löschen (pop)' },
+      { id: 'apply', label: t.sidebar.apply },
+      { id: 'pop', label: t.sidebar.applyAndDrop },
       { type: 'separator' },
-      { id: 'drop', label: 'Löschen…' }
+      { id: 'drop', label: t.common.deleteEllipsis }
     ])
-    if (choice === 'apply') void run('Stash anwenden', () => git.stashApply(repo, s.ref))
-    if (choice === 'pop') void run('Stash anwenden', () => git.stashPop(repo, s.ref))
+    if (choice === 'apply') void run(t.busy.applyStash, () => git.stashApply(repo, s.ref))
+    if (choice === 'pop') void run(t.busy.applyStash, () => git.stashPop(repo, s.ref))
     if (choice === 'drop') {
-      void run('Stash löschen', async () => {
+      void run(t.busy.dropStash, async () => {
         await dropStash(repo, s)
         if (view.kind === 'stash' && view.stash.ref === s.ref) onView({ kind: 'history' })
       })
@@ -194,8 +195,8 @@ export function Sidebar({ refs, status, view, onView }: Props) {
 
   const worktreeMenu = async (w: Worktree) => {
     const choice = await app.contextMenu([
-      { id: 'open', label: 'Öffnen', enabled: !w.isCurrent },
-      { id: 'show', label: 'Im Explorer anzeigen' }
+      { id: 'open', label: t.common.open, enabled: !w.isCurrent },
+      { id: 'show', label: t.common.showInExplorer }
     ])
     if (choice === 'open') openRepo(w.path)
     if (choice === 'show') void app.showInFolder(w.path)
@@ -254,18 +255,18 @@ export function Sidebar({ refs, status, view, onView }: Props) {
     <div className="sidebar">
       <div className="side-search">
         <Search size={13} />
-        <input value={filter} placeholder="Filtern…" onChange={(e) => setFilter(e.target.value)} />
+        <input value={filter} placeholder={t.sidebar.filter} onChange={(e) => setFilter(e.target.value)} />
       </div>
       <div className="side-scroll">
         <Row
           depth={0}
           icon={<FileDiff size={14} />}
-          label="Lokale Änderungen"
+          label={t.sidebar.localChanges}
           active={view.kind === 'changes'}
           extra={changeCount > 0 && <span className="pill">{changeCount}</span>}
           onClick={() => onView({ kind: 'changes' })}
         />
-        <Row depth={0} icon={<History size={14} />} label="Alle Commits" active={view.kind === 'history'} onClick={() => onView({ kind: 'history' })} />
+        <Row depth={0} icon={<History size={14} />} label={t.sidebar.allCommits} active={view.kind === 'history'} onClick={() => onView({ kind: 'history' })} />
 
         <Section title="Branches" count={refs.local.length} open={isOpen('sec:local')} onToggle={() => toggle('sec:local')}>
           {renderTree(localTree, 1, renderLocal)}
@@ -294,8 +295,8 @@ export function Sidebar({ refs, status, view, onView }: Props) {
         </Section>
 
         <Section title="Tags" count={refs.tags.length} open={isOpen('sec:tags')} onToggle={() => toggle('sec:tags')}>
-          {tags.map((t) => (
-            <Row key={t.name} depth={1} icon={<TagIcon size={14} />} label={t.name} onClick={() => jumpTo(t.hash)} onContextMenu={() => tagMenu(t)} />
+          {tags.map((tag) => (
+            <Row key={tag.name} depth={1} icon={<TagIcon size={14} />} label={tag.name} onClick={() => jumpTo(tag.hash)} onContextMenu={() => tagMenu(tag)} />
           ))}
         </Section>
 
@@ -321,9 +322,9 @@ export function Sidebar({ refs, status, view, onView }: Props) {
               depth={1}
               icon={<FolderGit2 size={14} />}
               label={w.branch ?? `(detached ${w.head.slice(0, 7)})`}
-              title={`${w.path}${w.isMain ? ' (Haupt-Worktree)' : ''}${w.locked ? ' – gesperrt' : ''}${w.prunable ? ' – verwaist' : ''}`}
+              title={`${w.path}${w.isMain ? t.sidebar.mainWorktree : ''}${w.locked ? t.sidebar.locked : ''}${w.prunable ? t.sidebar.prunable : ''}`}
               strong={w.isCurrent}
-              extra={w.isMain && <span className="track">Haupt</span>}
+              extra={w.isMain && <span className="track">{t.sidebar.mainBadge}</span>}
               onDoubleClick={() => !w.isCurrent && openRepo(w.path)}
               onContextMenu={() => worktreeMenu(w)}
             />

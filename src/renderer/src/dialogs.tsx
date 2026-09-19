@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { X } from 'lucide-react'
+import { t } from './i18n'
 import { errorMessage } from './lib/format'
 
 function createStore<T>(initial: T) {
@@ -44,7 +45,7 @@ export function prompt(options: PromptOptions): Promise<PromptResult | null> {
 }
 
 export const validateBranchName = (v: string): string | null =>
-  !v.trim() ? 'Bitte einen Namen eingeben.' : /[\s~^:?*[\\]|\.\.|@\{|\/$|\.lock$|^-/.test(v) ? 'Ungültiger Branch-Name.' : null
+  !v.trim() ? t.dialogs.enterName : /[\s~^:?*[\\]|\.\.|@\{|\/$|\.lock$|^-/.test(v) ? t.dialogs.invalidBranchName : null
 
 function PromptDialog({ request }: { request: PromptRequest }) {
   const [value, setValue] = useState(request.defaultValue ?? '')
@@ -87,7 +88,7 @@ function PromptDialog({ request }: { request: PromptRequest }) {
           </label>
         )}
         <div className="modal-actions">
-          <button onClick={() => close(null)}>Abbrechen</button>
+          <button onClick={() => close(null)}>{t.common.cancel}</button>
           <button className="primary" disabled={!!error} onClick={submit}>
             {request.confirmLabel}
           </button>
@@ -131,10 +132,10 @@ export function ToastHost() {
   const toasts = useSyncExternalStore(toastStore.subscribe, toastStore.get)
   return (
     <div className="toasts">
-      {toasts.map((t) => (
-        <div key={t.id} className={`toast ${t.kind}`}>
-          <pre>{t.text}</pre>
-          <button className="icon" title="Schließen" onClick={() => removeToast(t.id)}>
+      {toasts.map((toast) => (
+        <div key={toast.id} className={`toast ${toast.kind}`}>
+          <pre>{toast.text}</pre>
+          <button className="icon" title={t.common.close} onClick={() => removeToast(toast.id)}>
             <X size={14} />
           </button>
         </div>

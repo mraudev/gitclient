@@ -3,6 +3,7 @@ import type {
   CommitDetails,
   ConfirmOptions,
   FileChange,
+  Language,
   MenuItem,
   Refs,
   RepoInfo,
@@ -57,4 +58,6 @@ export interface AppApi {
   contextMenu(items: MenuItem[]): Promise<string | null>
   confirm(options: ConfirmOptions): Promise<boolean>
   showInFolder(path: string): Promise<void>
+  /** Sprache für Texte des Hauptprozesses (Dialoge, Fehlermeldungen) */
+  setLanguage(language: Language): Promise<void>
 }

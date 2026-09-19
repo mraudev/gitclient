@@ -94,9 +94,15 @@ export interface RepoInfo {
 export interface MenuItem {
   id?: string
   label?: string
-  type?: 'separator'
+  type?: 'separator' | 'radio'
+  checked?: boolean
   enabled?: boolean
 }
+
+export type Language = 'en' | 'de'
+
+/** Steht im Diff einer untracked Datei statt des Inhalts, wenn sie zu groß für die Vorschau ist. */
+export const PREVIEW_TOO_LARGE = 'gitclient:preview-too-large'
 
 export interface ConfirmOptions {
   message: string

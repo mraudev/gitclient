@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { RepoInfo } from '../../shared/types'
 import { app } from './api'
 import { DialogHost, notifyError, ToastHost } from './dialogs'
+import { useLanguage } from './i18n'
 import { RepoView } from './components/RepoView'
 import { Welcome } from './components/Welcome'
 
@@ -10,6 +11,7 @@ const LAST_REPO_KEY = 'lastRepo'
 export function App() {
   const [repo, setRepo] = useState<RepoInfo | null>(null)
   const [restoring, setRestoring] = useState(true)
+  const language = useLanguage()
 
   const open = useCallback(async (path: string) => {
     try {
@@ -38,7 +40,9 @@ export function App() {
 
   return (
     <>
-      {!restoring && (repo ? <RepoView key={repo.path} repo={repo} openRepo={open} /> : <Welcome onOpen={open} />)}
+      {/* Sprache im key: beim Umschalten wird die Ansicht mit den neuen Texten neu aufgebaut */}
+      {!restoring &&
+        (repo ? <RepoView key={`${language}:${repo.path}`} repo={repo} openRepo={open} /> : <Welcome key={language} onOpen={open} />)}
       <DialogHost />
       <ToastHost />
     </>

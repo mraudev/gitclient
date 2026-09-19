@@ -2,6 +2,8 @@ import { spawn } from 'node:child_process'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import type { GitApi } from '../shared/api'
+import { PREVIEW_TOO_LARGE } from '../shared/types'
+import { mt } from './i18n'
 import type {
   Branch,
   Commit,
@@ -44,7 +46,7 @@ export function runGit(cwd: string, args: string[], opts: RunOptions = {}): Prom
         resolve(Buffer.concat(out).toString('utf8'))
       } else {
         const msg = Buffer.concat(err).toString('utf8').trim()
-        reject(new Error(msg || `git ${args[0]} fehlgeschlagen (Exit-Code ${code})`))
+        reject(new Error(msg || mt.gitFailed(args[0], code)))
       }
     })
     child.stdin.end(opts.input ?? '')
@@ -119,7 +121,7 @@ async function untrackedDiff(repo: string, file: string): Promise<string> {
   const full = path.join(repo, file)
   const stat = await fs.stat(full)
   const header = `diff --git a/${file} b/${file}\nnew file\n--- /dev/null\n+++ b/${file}\n`
-  if (stat.size > MAX_UNTRACKED_PREVIEW) return `${header}Datei zu groß für die Vorschau\n`
+  if (stat.size > MAX_UNTRACKED_PREVIEW) return `${header}${PREVIEW_TOO_LARGE}\n`
   const buf = await fs.readFile(full)
   if (buf.subarray(0, 8000).includes(0)) return `${header}Binary files /dev/null and b/${file} differ\n`
   const text = buf.toString('utf8')
@@ -290,7 +292,7 @@ async function commitDetails(repo: string, hash: string): Promise<CommitDetails>
 
 async function currentBranch(repo: string): Promise<string> {
   const s = await status(repo)
-  if (!s.branch) throw new Error('Kein Branch ausgecheckt (detached HEAD).')
+  if (!s.branch) throw new Error(mt.noBranch)
   return s.branch
 }
 
@@ -402,7 +404,7 @@ export const gitApi: GitApi = {
     }
     const branch = await currentBranch(repo)
     const remotes = (await runGit(repo, ['remote'])).split('\n').filter(Boolean)
-    if (remotes.length === 0) throw new Error('Es ist kein Remote konfiguriert.')
+    if (remotes.length === 0) throw new Error(mt.noRemote)
     const remote = remotes.includes('origin') ? 'origin' : remotes[0]
     await runGit(repo, ['push', '-u', remote, branch])
   },

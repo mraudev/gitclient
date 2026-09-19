@@ -1,8 +1,15 @@
+import { PREVIEW_TOO_LARGE } from '../../../shared/types'
+
 export type DiffLineKind = 'context' | 'add' | 'del' | 'hunk' | 'file' | 'info'
+
+/** Art einer Info-Zeile; übersetzt wird erst in der Anzeige, damit der Parser sprachunabhängig bleibt */
+export type DiffInfo = 'renamedFrom' | 'modeChanged' | 'binary' | 'tooLarge' | 'noNewline'
 
 export interface DiffLine {
   kind: DiffLineKind
+  /** Bei Info-Zeilen der Parameter (z. B. alter Pfad), sonst der Zeileninhalt */
   text: string
+  info?: DiffInfo
   oldNo?: number
   newNo?: number
   /** Laufende Nummer des Hunks (nur bei normalen "@@"-Headern), passend zu extractHunkPatch */
@@ -49,16 +56,16 @@ export function parseDiff(raw: string): DiffLine[] {
       continue
     }
     if (!inHunk) {
-      if (line.startsWith('rename from ')) result.push({ kind: 'info', text: `Umbenannt von ${line.slice(12)}` })
-      else if (line.startsWith('old mode ')) result.push({ kind: 'info', text: `Dateimodus geändert: ${line.slice(9)}` })
-      else if (/^Binary files .* differ$/.test(line)) result.push({ kind: 'info', text: 'Binärdatei – keine Textvorschau' })
-      else if (line === 'Datei zu groß für die Vorschau') result.push({ kind: 'info', text: line })
+      if (line.startsWith('rename from ')) result.push({ kind: 'info', info: 'renamedFrom', text: line.slice(12) })
+      else if (line.startsWith('old mode ')) result.push({ kind: 'info', info: 'modeChanged', text: line.slice(9) })
+      else if (/^Binary files .* differ$/.test(line)) result.push({ kind: 'info', info: 'binary', text: '' })
+      else if (line === PREVIEW_TOO_LARGE) result.push({ kind: 'info', info: 'tooLarge', text: '' })
       continue
     }
     if (line.startsWith('+')) result.push({ kind: 'add', text: line.slice(1), newNo: newNo++ })
     else if (line.startsWith('-')) result.push({ kind: 'del', text: line.slice(1), oldNo: oldNo++ })
     else if (line.startsWith(' ')) result.push({ kind: 'context', text: line.slice(1), oldNo: oldNo++, newNo: newNo++ })
-    else if (line.startsWith('\\')) result.push({ kind: 'info', text: line.slice(2) })
+    else if (line.startsWith('\\')) result.push({ kind: 'info', info: 'noNewline', text: line.slice(2) })
   }
   return result
 }

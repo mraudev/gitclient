@@ -4,6 +4,7 @@ import path from 'node:path'
 import type { AppApi } from '../shared/api'
 import type { RepoInfo } from '../shared/types'
 import { gitApi, repoRoot } from './git'
+import { mt, setMainLanguage } from './i18n'
 
 const MAX_RECENT = 15
 const recentFile = () => path.join(app.getPath('userData'), 'recent.json')
@@ -25,7 +26,7 @@ async function openRepo(dir: string): Promise<RepoInfo> {
   try {
     root = await repoRoot(dir)
   } catch {
-    throw new Error(`"${dir}" ist kein Git-Repository.`)
+    throw new Error(mt.notARepo(dir))
   }
   const info: RepoInfo = { path: root, name: path.basename(root) }
   const recent = (await readRecent()).filter((r) => r.path.toLowerCase() !== root.toLowerCase())
@@ -72,7 +73,7 @@ function registerIpc(): void {
   const appApi: AppApi = {
     async openRepoDialog() {
       const win = BrowserWindow.getFocusedWindow()
-      const opts: Electron.OpenDialogOptions = { title: 'Repository öffnen', properties: ['openDirectory'] }
+      const opts: Electron.OpenDialogOptions = { title: mt.openRepoTitle, properties: ['openDirectory'] }
       const res = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
       if (res.canceled || res.filePaths.length === 0) return null
       return openRepo(res.filePaths[0])
@@ -88,7 +89,13 @@ function registerIpc(): void {
           items.map((item) =>
             item.type === 'separator'
               ? { type: 'separator' }
-              : { label: item.label, enabled: item.enabled ?? true, click: () => resolve(item.id ?? null) }
+              : {
+                  type: item.type === 'radio' ? 'radio' : 'normal',
+                  checked: item.checked,
+                  label: item.label,
+                  enabled: item.enabled ?? true,
+                  click: () => resolve(item.id ?? null)
+                }
           )
         )
         // "click" feuert vor dem Schließen; das verzögerte null greift nur ohne Auswahl
@@ -100,7 +107,7 @@ function registerIpc(): void {
         type: 'warning',
         message,
         detail,
-        buttons: [confirmLabel, 'Abbrechen'],
+        buttons: [confirmLabel, mt.cancel],
         defaultId: 0,
         cancelId: 1,
         noLink: true
@@ -111,6 +118,9 @@ function registerIpc(): void {
     },
     async showInFolder(p) {
       shell.showItemInFolder(p)
+    },
+    async setLanguage(language) {
+      setMainLanguage(language)
     }
   }
 
