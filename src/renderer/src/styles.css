@@ -709,6 +709,12 @@ button.icon.inline {
   background: var(--bg-select);
 }
 
+.file-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
 .file-name {
   flex: none;
   max-width: 60%;

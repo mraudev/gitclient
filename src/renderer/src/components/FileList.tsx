@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { FileChange } from '../../../shared/types'
+import { fileIconUrl } from '../lib/fileIcons'
 import { t } from '../i18n'
 import { splitPath } from '../lib/format'
 
@@ -34,6 +35,7 @@ export function FileList({ files, selectedPath, onSelect, onDoubleClick, onConte
             <span className={`status-badge s-${f.status === '?' ? 'N' : f.status}`} title={t.status[f.status]}>
               {f.status === '?' ? '+' : f.status}
             </span>
+            <img className="file-icon" src={fileIconUrl(f.path)} alt="" draggable={false} />
             <span className="file-name">{name}</span>
             <span className="file-dir">{dir}</span>
             {action && (

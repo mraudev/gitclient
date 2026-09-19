@@ -38,6 +38,8 @@ src/
     src/components/     Toolbar, Sidebar, CommitList, CommitDetails, ChangesView, DiffView …
 ```
 
+Dateityp-Icons stammen aus dem [Material Icon Theme](https://github.com/material-extensions/vscode-material-icon-theme) (MIT-Lizenz, © 2025 Material Extensions). Die Zuordnung steckt in `src/renderer/src/lib/fileIcons.ts`; beim Build werden nur die Datei-Icons (ohne Ordner-Icons) als SVG-Dateien übernommen.
+
 Sprachen: Englisch (Standard) und Deutsch, umschaltbar über das Zahnrad in der Toolbar bzw. auf der Startseite.
 Texte stehen in `src/renderer/src/i18n.ts` (Oberfläche) und `src/main/i18n.ts` (Dialoge/Fehler des Hauptprozesses).
 Neue Texte zuerst im deutschen Wörterbuch anlegen – der Typecheck meldet dann, wo die englische Fassung fehlt.
