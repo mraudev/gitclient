@@ -346,6 +346,10 @@ export const gitApi: GitApi = {
     await runGit(repo, ['apply', '--cached', ...(reverse ? ['-R'] : []), '--whitespace=nowarn', '-'], { input: patch })
   },
 
+  async discardPatch(repo, patch) {
+    await runGit(repo, ['apply', '-R', '--whitespace=nowarn', '-'], { input: patch })
+  },
+
   async commit(repo, message, amend) {
     await runGit(repo, ['commit', '-F', '-', ...(amend ? ['--amend'] : [])], { input: message })
   },

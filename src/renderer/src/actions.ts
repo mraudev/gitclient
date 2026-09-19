@@ -73,3 +73,12 @@ export async function discardChanges(repo: string, files: FileChange[]): Promise
   })
   if (ok) await git.discard(repo, files)
 }
+
+export async function discardHunk(repo: string, path: string, patch: string): Promise<void> {
+  const ok = await app.confirm({
+    message: `Diesen Hunk in "${path}" verwerfen?`,
+    detail: 'Die Änderung wird aus der Datei entfernt. Das kann nicht rückgängig gemacht werden.',
+    confirmLabel: 'Verwerfen'
+  })
+  if (ok) await git.discardPatch(repo, patch)
+}

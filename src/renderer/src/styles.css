@@ -880,12 +880,21 @@ button.icon.inline {
   align-items: center;
 }
 
-.hunk-action {
+.hunk-actions {
   position: sticky;
   right: 8px;
   flex: none;
+  display: flex;
+  gap: 6px;
   margin: 2px 0;
   font-family: var(--font);
+}
+
+button.danger:hover:not(:disabled) {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+  filter: none;
 }
 
 .diff-line.file {

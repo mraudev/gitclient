@@ -7,11 +7,17 @@ interface Props {
   diff: string | null
   title?: string
   emptyText?: string
-  /** Optionaler Button in jedem Hunk-Header (z. B. "Hunk stagen") */
-  hunkAction?: { label: string; onClick(hunkIndex: number): void }
+  /** Optionale Buttons in jedem Hunk-Header (z. B. "Hunk stagen") */
+  hunkActions?: HunkAction[]
 }
 
-export function DiffView({ diff, title, emptyText = 'Datei auswählen, um die Änderungen zu sehen', hunkAction }: Props) {
+export interface HunkAction {
+  label: string
+  danger?: boolean
+  onClick(hunkIndex: number): void
+}
+
+export function DiffView({ diff, title, emptyText = 'Datei auswählen, um die Änderungen zu sehen', hunkActions }: Props) {
   const lines = useMemo(() => (diff === null ? [] : parseDiff(diff)), [diff])
 
   if (diff === null) return <div className="placeholder">{emptyText}</div>
@@ -26,10 +32,14 @@ export function DiffView({ diff, title, emptyText = 'Datei auswählen, um die Ä
             <span className="ln">{l.oldNo ?? ''}</span>
             <span className="ln">{l.newNo ?? ''}</span>
             <span className="code">{l.kind === 'add' ? '+' : l.kind === 'del' ? '-' : ' '}{l.text}</span>
-            {hunkAction && l.hunkIndex !== undefined && (
-              <button className="small hunk-action" onClick={() => hunkAction.onClick(l.hunkIndex!)}>
-                {hunkAction.label}
-              </button>
+            {hunkActions && l.hunkIndex !== undefined && (
+              <span className="hunk-actions">
+                {hunkActions.map((a) => (
+                  <button key={a.label} className={`small ${a.danger ? 'danger' : ''}`} onClick={() => a.onClick(l.hunkIndex!)}>
+                    {a.label}
+                  </button>
+                ))}
+              </span>
             )}
           </div>
         ))}
