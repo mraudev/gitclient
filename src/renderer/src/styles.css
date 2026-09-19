@@ -788,8 +788,12 @@ button.icon.inline {
   gap: 6px;
 }
 
+.commit-summary {
+  font-weight: 600;
+}
+
 .commit-box textarea {
-  height: 90px;
+  height: 72px;
   resize: vertical;
   font-family: var(--font);
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowDownToLine, ArrowUpFromLine } from 'lucide-react'
 import type { FileChange, StatusResult } from '../../../shared/types'
 import { app, git } from '../api'
@@ -20,8 +20,10 @@ export function ChangesView({ status }: { status: StatusResult }) {
   const { repo, run } = useRepo()
   const [selection, setSelection] = useState<Selection | null>(null)
   const [diff, setDiff] = useState<string | null>(null)
-  const [message, setMessage] = useState('')
+  const [summary, setSummary] = useState('')
+  const [description, setDescription] = useState('')
   const [amend, setAmend] = useState(false)
+  const descriptionRef = useRef<HTMLTextAreaElement>(null)
 
   const findFile = (sel: Selection | null) => (sel ? (sel.staged ? status.staged : status.unstaged).find((f) => f.path === sel.path) : undefined)
 
@@ -101,9 +103,16 @@ export function ChangesView({ status }: { status: StatusResult }) {
     if (choice === 'show') void app.showInFolder(`${repo}/${f.path}`)
   }
 
+  // Mehrzeiliger Text: erste Zeile = Zusammenfassung, Rest (ohne führende Leerzeilen) = Beschreibung
+  const setMessage = (text: string) => {
+    const [first, ...rest] = text.split(/\r?\n/)
+    setSummary(first)
+    setDescription(rest.join('\n').replace(/^\s*\n/, ''))
+  }
+
   const toggleAmend = async (checked: boolean) => {
     setAmend(checked)
-    if (checked && !message.trim()) {
+    if (checked && !summary.trim() && !description.trim()) {
       try {
         setMessage(await git.lastCommitMessage(repo))
       } catch (e) {
@@ -112,14 +121,23 @@ export function ChangesView({ status }: { status: StatusResult }) {
     }
   }
 
-  const canCommit = message.trim().length > 0 && (status.staged.length > 0 || amend)
+  const canCommit = summary.trim().length > 0 && (status.staged.length > 0 || amend)
   const commit = () => {
     if (!canCommit) return
+    const message = description.trim() ? `${summary.trim()}\n\n${description.trimEnd()}` : summary.trim()
     void run(amend ? 'Amend' : 'Commit', async () => {
       await git.commit(repo, message, amend)
-      setMessage('')
+      setSummary('')
+      setDescription('')
       setAmend(false)
     })
+  }
+
+  const commitOnCtrlEnter = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && e.ctrlKey) {
+      e.preventDefault()
+      commit()
+    }
   }
 
   const conflicts = status.unstaged.filter((f) => f.status === 'U').length
@@ -163,20 +181,44 @@ export function ChangesView({ status }: { status: StatusResult }) {
           </div>
         </Split>
         <div className="commit-box">
-          <textarea
-            value={message}
-            placeholder={t.changes.commitPlaceholder}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && e.ctrlKey) commit()
+          <input
+            className="commit-summary"
+            value={summary}
+            placeholder={t.changes.summaryPlaceholder}
+            onChange={(e) => setSummary(e.target.value)}
+            onPaste={(e) => {
+              // Mehrzeiliger Text: erste Zeile bleibt in der Zusammenfassung, der Rest wandert in die Beschreibung
+              const text = e.clipboardData.getData('text')
+              if (!text.includes('\n')) return
+              e.preventDefault()
+              const input = e.currentTarget
+              const combined = summary.slice(0, input.selectionStart ?? summary.length) + text + summary.slice(input.selectionEnd ?? summary.length)
+              const [first, ...rest] = combined.split(/\r?\n/)
+              const pastedRest = rest.join('\n').replace(/^\s*\n/, '')
+              setSummary(first)
+              setDescription(description ? `${pastedRest}\n${description}` : pastedRest)
+              descriptionRef.current?.focus()
             }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.ctrlKey) {
+                e.preventDefault()
+                descriptionRef.current?.focus()
+              } else commitOnCtrlEnter(e)
+            }}
+          />
+          <textarea
+            ref={descriptionRef}
+            value={description}
+            placeholder={t.changes.descriptionPlaceholder}
+            onChange={(e) => setDescription(e.target.value)}
+            onKeyDown={commitOnCtrlEnter}
           />
           <div className="commit-actions">
             <label className="checkbox">
               <input type="checkbox" checked={amend} onChange={(e) => toggleAmend(e.target.checked)} />
               {t.changes.amend}
             </label>
-            <button className="primary" disabled={!canCommit} onClick={commit}>
+            <button className="primary" disabled={!canCommit} onClick={commit} title={t.changes.commitShortcut}>
               {amend ? 'Amend' : `Commit${status.staged.length ? ` (${status.staged.length})` : ''}`}
             </button>
           </div>
