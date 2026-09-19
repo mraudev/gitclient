@@ -5,6 +5,7 @@ import type { AppApi } from '../shared/api'
 import type { RepoInfo } from '../shared/types'
 import { gitApi, repoRoot } from './git'
 import { mt, setMainLanguage } from './i18n'
+import { updateAppMenu } from './menu'
 import iconIco from '../../resources/icon.ico?asset'
 import iconPng from '../../resources/icon.png?asset'
 
@@ -33,7 +34,14 @@ async function openRepo(dir: string): Promise<RepoInfo> {
   const info: RepoInfo = { path: root, name: path.basename(root) }
   const recent = (await readRecent()).filter((r) => r.path.toLowerCase() !== root.toLowerCase())
   await writeRecent([info, ...recent].slice(0, MAX_RECENT))
+  void refreshMenu()
   return info
+}
+
+let repoOpen = false
+
+async function refreshMenu(): Promise<void> {
+  updateAppMenu({ repoOpen, recent: await readRecent() })
 }
 
 function createWindow(): BrowserWindow {
@@ -55,9 +63,6 @@ function createWindow(): BrowserWindow {
     }
   })
   win.once('ready-to-show', () => win.show())
-  win.webContents.on('before-input-event', (_e, input) => {
-    if (input.type === 'keyDown' && input.key === 'F12') win.webContents.toggleDevTools()
-  })
   // Links nie im App-Fenster öffnen
   win.webContents.setWindowOpenHandler(({ url }) => {
     void shell.openExternal(url)
@@ -86,6 +91,7 @@ function registerIpc(): void {
     recentRepos: readRecent,
     async removeRecent(p) {
       await writeRecent((await readRecent()).filter((r) => r.path !== p))
+      await refreshMenu()
     },
     contextMenu(items) {
       return new Promise((resolve) => {
@@ -93,13 +99,7 @@ function registerIpc(): void {
           items.map((item) =>
             item.type === 'separator'
               ? { type: 'separator' }
-              : {
-                  type: item.type === 'radio' ? 'radio' : 'normal',
-                  checked: item.checked,
-                  label: item.label,
-                  enabled: item.enabled ?? true,
-                  click: () => resolve(item.id ?? null)
-                }
+              : { label: item.label, enabled: item.enabled ?? true, click: () => resolve(item.id ?? null) }
           )
         )
         // "click" feuert vor dem Schließen; das verzögerte null greift nur ohne Auswahl
@@ -125,6 +125,11 @@ function registerIpc(): void {
     },
     async setLanguage(language) {
       setMainLanguage(language)
+      await refreshMenu()
+    },
+    async setRepoOpen(open) {
+      repoOpen = open
+      await refreshMenu()
     }
   }
 
@@ -134,7 +139,7 @@ function registerIpc(): void {
 }
 
 app.whenReady().then(() => {
-  Menu.setApplicationMenu(null)
+  void refreshMenu()
   registerIpc()
   createWindow()
   app.on('activate', () => {

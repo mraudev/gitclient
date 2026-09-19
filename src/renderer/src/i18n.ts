@@ -20,8 +20,11 @@ const de = {
     showInExplorer: 'Im Explorer anzeigen',
     openRepoEllipsis: 'Repository öffnen…',
     hashCopied: 'Hash kopiert',
-    language: 'Sprache',
-    settings: 'Einstellungen'
+    save: 'Speichern'
+  },
+  settings: {
+    title: 'Einstellungen',
+    language: 'Sprache'
   },
   buttons: {
     stage: 'Stagen',
@@ -189,8 +192,11 @@ const en: Messages = {
     showInExplorer: 'Show in Explorer',
     openRepoEllipsis: 'Open repository…',
     hashCopied: 'Hash copied',
-    language: 'Language',
-    settings: 'Settings'
+    save: 'Save'
+  },
+  settings: {
+    title: 'Settings',
+    language: 'Language'
   },
   buttons: {
     stage: 'Stage',
@@ -381,14 +387,12 @@ export function useLanguage(): Language {
   )
 }
 
+export const getLanguage = (): Language => current
+
 export const dateLocale = (): string => (current === 'de' ? 'de-DE' : 'en-US')
 
-/** Menü zur Sprachauswahl (Zahnrad in Toolbar und Willkommensseite). */
-export async function showLanguageMenu(): Promise<void> {
-  const choice = await app.contextMenu([
-    { label: t.common.language, enabled: false },
-    { id: 'en', label: 'English', type: 'radio', checked: current === 'en' },
-    { id: 'de', label: 'Deutsch', type: 'radio', checked: current === 'de' }
-  ])
-  if (choice === 'en' || choice === 'de') setLanguage(choice)
-}
+/** Sprachen in der Auswahl – jeweils in der eigenen Sprache benannt */
+export const LANGUAGES: { id: Language; name: string }[] = [
+  { id: 'en', name: 'English' },
+  { id: 'de', name: 'Deutsch' }
+]

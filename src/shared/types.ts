@@ -94,12 +94,27 @@ export interface RepoInfo {
 export interface MenuItem {
   id?: string
   label?: string
-  type?: 'separator' | 'radio'
-  checked?: boolean
+  type?: 'separator'
   enabled?: boolean
 }
 
 export type Language = 'en' | 'de'
+
+/** Aktionen aus dem Hauptmenü, die der Hauptprozess an die Oberfläche weiterreicht (Kanal "menu"). */
+export type MenuAction =
+  | 'open-repo'
+  | 'open-recent' // Argument: Repo-Pfad
+  | 'close-repo'
+  | 'settings'
+  | 'view-changes'
+  | 'view-history'
+  | 'refresh'
+  | 'fetch'
+  | 'pull'
+  | 'push'
+  | 'new-branch'
+  | 'stash'
+  | 'show-in-explorer'
 
 /** Steht im Diff einer untracked Datei statt des Inhalts, wenn sie zu groß für die Vorschau ist. */
 export const PREVIEW_TOO_LARGE = 'gitclient:preview-too-large'

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Commit, Refs, RepoInfo, StatusResult } from '../../../shared/types'
-import { app, git } from '../api'
-import { createBranch } from '../actions'
+import { app, git, useMenuAction } from '../api'
+import { createBranch, saveStash } from '../actions'
 import { notify, notifyError } from '../dialogs'
 import { t } from '../i18n'
 import { computeGraph } from '../lib/graph'
@@ -43,15 +43,8 @@ export function RepoView({ repo, openRepo }: { repo: RepoInfo; openRepo(path: st
   useEffect(() => {
     void refresh()
     const onFocus = () => void refresh()
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'F5') void refresh()
-    }
     window.addEventListener('focus', onFocus)
-    window.addEventListener('keydown', onKey)
-    return () => {
-      window.removeEventListener('focus', onFocus)
-      window.removeEventListener('keydown', onKey)
-    }
+    return () => window.removeEventListener('focus', onFocus)
   }, [refresh])
 
   // Beim ersten Laden den HEAD-Commit auswählen
@@ -89,6 +82,20 @@ export function RepoView({ repo, openRepo }: { repo: RepoInfo; openRepo(path: st
     },
     [commits]
   )
+
+  // Repo-bezogene Aktionen aus dem Hauptmenü (Öffnen/Schließen/Einstellungen behandelt App)
+  useMenuAction((action) => {
+    if (action === 'view-changes') setView({ kind: 'changes' })
+    if (action === 'view-history') setView({ kind: 'history' })
+    if (action === 'refresh') void refresh()
+    if (action === 'show-in-explorer') void app.showInFolder(repo.path)
+    if (busy || !status) return // wie die Toolbar-Buttons: keine zweite Git-Aktion gleichzeitig
+    if (action === 'fetch') void run('Fetch', () => git.fetch(repo.path))
+    if (action === 'pull') void run('Pull', () => git.pull(repo.path))
+    if (action === 'push') void run('Push', () => git.push(repo.path))
+    if (action === 'new-branch') void run(t.busy.createBranch, () => createBranch(repo.path, 'HEAD', status.branch ?? 'detached HEAD'))
+    if (action === 'stash' && status.staged.length + status.unstaged.length > 0) void run('Stash', () => saveStash(repo.path))
+  })
 
   const ctx: RepoCtx = useMemo(() => ({ repo: repo.path, run, jumpTo, openRepo }), [repo.path, run, jumpTo, openRepo])
 

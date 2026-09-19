@@ -58,6 +58,8 @@ export interface AppApi {
   contextMenu(items: MenuItem[]): Promise<string | null>
   confirm(options: ConfirmOptions): Promise<boolean>
   showInFolder(path: string): Promise<void>
-  /** Sprache für Texte des Hauptprozesses (Dialoge, Fehlermeldungen) */
+  /** Sprache für Texte des Hauptprozesses (Dialoge, Fehlermeldungen, Hauptmenü) */
   setLanguage(language: Language): Promise<void>
+  /** Ob ein Repo offen ist – schaltet die repo-bezogenen Menüpunkte frei */
+  setRepoOpen(open: boolean): Promise<void>
 }

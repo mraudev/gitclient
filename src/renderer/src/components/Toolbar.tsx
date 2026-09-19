@@ -1,9 +1,9 @@
-import { Archive, ArrowDown, ArrowUp, ChevronDown, FolderGit2, GitBranch, Loader2, RefreshCw, CloudDownload, Settings } from 'lucide-react'
+import { Archive, ArrowDown, ArrowUp, ChevronDown, FolderGit2, GitBranch, Loader2, RefreshCw, CloudDownload } from 'lucide-react'
 import type { StatusResult } from '../../../shared/types'
 import { app, git } from '../api'
 import { createBranch, saveStash } from '../actions'
 import { notifyError } from '../dialogs'
-import { showLanguageMenu, t } from '../i18n'
+import { t } from '../i18n'
 import { useRepo } from '../repoContext'
 
 interface Props {
@@ -86,9 +86,6 @@ export function Toolbar({ repoName, status, busy, onRefresh }: Props) {
       )}
       <button className="icon" onClick={onRefresh} title={t.toolbar.refresh}>
         <RefreshCw size={16} />
-      </button>
-      <button className="icon" onClick={showLanguageMenu} title={t.common.settings}>
-        <Settings size={16} />
       </button>
     </div>
   )

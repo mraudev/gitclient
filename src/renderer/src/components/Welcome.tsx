@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { FolderGit2, FolderOpen, Settings, X } from 'lucide-react'
+import { FolderGit2, FolderOpen, X } from 'lucide-react'
 import type { RepoInfo } from '../../../shared/types'
 import { app } from '../api'
 import { notifyError } from '../dialogs'
-import { showLanguageMenu, t } from '../i18n'
+import { t } from '../i18n'
 
 export function Welcome({ onOpen }: { onOpen(path: string): void }) {
   const [recent, setRecent] = useState<RepoInfo[]>([])
@@ -28,9 +28,6 @@ export function Welcome({ onOpen }: { onOpen(path: string): void }) {
 
   return (
     <div className="welcome">
-      <button className="icon welcome-settings" onClick={showLanguageMenu} title={t.common.settings}>
-        <Settings size={18} />
-      </button>
       <div className="welcome-card">
         <h1>Git Client</h1>
         <button className="primary big" onClick={openDialog}>

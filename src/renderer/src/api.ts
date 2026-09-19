@@ -1,9 +1,21 @@
+import { useEffect, useRef } from 'react'
 import type { AppApi, GitApi } from '../../shared/api'
+import type { MenuAction } from '../../shared/types'
 
 declare global {
   interface Window {
-    bridge: { invoke(channel: string, ...args: unknown[]): Promise<unknown> }
+    bridge: {
+      invoke(channel: string, ...args: unknown[]): Promise<unknown>
+      onMenu(callback: (action: MenuAction, arg?: string) => void): () => void
+    }
   }
+}
+
+/** Reagiert auf Aktionen aus dem Hauptmenü; der Handler darf sich bei jedem Rendern ändern. */
+export function useMenuAction(handler: (action: MenuAction, arg?: string) => void): void {
+  const ref = useRef(handler)
+  ref.current = handler
+  useEffect(() => window.bridge.onMenu((action, arg) => ref.current(action, arg)), [])
 }
 
 /** Entfernt den Electron-Präfix "Error invoking remote method 'x': Error: ". */

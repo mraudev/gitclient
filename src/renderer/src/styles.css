@@ -82,13 +82,15 @@ body.resizing * {
 
 input,
 textarea,
+select,
 button {
   font: inherit;
   color: inherit;
 }
 
 input,
-textarea {
+textarea,
+select {
   background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -98,7 +100,8 @@ textarea {
 }
 
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
   border-color: var(--accent);
 }
 
@@ -990,17 +993,10 @@ button.danger:hover:not(:disabled) {
 /* ---------- Willkommen ---------- */
 
 .welcome {
-  position: relative;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.welcome-settings {
-  position: absolute;
-  top: 10px;
-  right: 10px;
 }
 
 .welcome-card {
