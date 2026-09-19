@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Commit, RefLabel } from '../../../shared/types'
 import type { GraphLayout, GraphRow } from '../lib/graph'
 import { t } from '../i18n'
+import { Avatar } from './Avatar'
 import { formatDate, shortHash } from '../lib/format'
 
 const ROW = 26
@@ -120,8 +121,9 @@ export function CommitList({ commits, graph, selectedHash, onSelect, onContextMe
                   ))}
                   <span className={`subject ${isHead ? 'head' : ''}`}>{c.subject}</span>
                 </span>
-                <span className="col-author" title={c.email}>
-                  {c.author}
+                <span className="col-author">
+                  <Avatar name={c.author} email={c.email} size={18} />
+                  <span className="author-name">{c.author}</span>
                 </span>
                 <span className="col-date">{formatDate(c.date)}</span>
                 <span className="col-hash">{shortHash(c.hash)}</span>

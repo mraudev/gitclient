@@ -4,6 +4,7 @@ import type { CommitDetails as Details, FileChange } from '../../../shared/types
 import { git } from '../api'
 import { notify, notifyError } from '../dialogs'
 import { t } from '../i18n'
+import { Avatar } from './Avatar'
 import { formatDate, shortHash } from '../lib/format'
 import { useRepo } from '../repoContext'
 import { DiffView } from './DiffView'
@@ -64,16 +65,26 @@ export function CommitDetails({ hash }: { hash: string }) {
               <tr>
                 <th>{t.details.author}</th>
                 <td>
-                  {details.author} &lt;{details.email}&gt;
-                  <div className="dim">{formatDate(details.date)}</div>
+                  <div className="person">
+                    <Avatar name={details.author} email={details.email} size={28} />
+                    <div>
+                      {details.author} &lt;{details.email}&gt;
+                      <div className="dim">{formatDate(details.date)}</div>
+                    </div>
+                  </div>
                 </td>
               </tr>
               {(details.committer !== details.author || details.committerDate !== details.date) && (
                 <tr>
                   <th>{t.details.committer}</th>
                   <td>
-                    {details.committer}
-                    <div className="dim">{formatDate(details.committerDate)}</div>
+                    <div className="person">
+                      <Avatar name={details.committer} email={details.committerEmail} size={28} />
+                      <div>
+                        {details.committer}
+                        <div className="dim">{formatDate(details.committerDate)}</div>
+                      </div>
+                    </div>
                   </td>
                 </tr>
               )}

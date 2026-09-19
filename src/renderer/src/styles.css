@@ -538,10 +538,18 @@ button.icon.inline {
 }
 
 .col-author {
-  width: 150px;
+  width: 170px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  padding-left: 10px;
+}
+
+.author-name {
   overflow: hidden;
   text-overflow: ellipsis;
-  padding-left: 10px;
 }
 
 .col-date {
@@ -650,6 +658,12 @@ button.icon.inline {
   border-spacing: 0 4px;
 }
 
+.person {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .meta th {
   text-align: left;
   color: var(--text-dim);
@@ -710,6 +724,19 @@ button.icon.inline {
 
 .file-row.selected {
   background: var(--bg-select);
+}
+
+.avatar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  user-select: none;
 }
 
 .file-icon {
