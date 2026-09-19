@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react'
 import { ArrowDownToLine, ArrowUpFromLine } from 'lucide-react'
 import type { FileChange, StatusResult } from '../../../shared/types'
 import { app, git } from '../api'
-import { discardChanges, discardHunk } from '../actions'
+import { discardChanges, discardPart } from '../actions'
 import { notifyError } from '../dialogs'
 import { t } from '../i18n'
-import { extractHunkPatch } from '../lib/diff'
+import { buildLinesPatch, extractHunkPatch } from '../lib/diff'
 import { useRepo } from '../repoContext'
-import { DiffView, type HunkAction } from './DiffView'
+import { DiffView, type HunkAction, type LineAction } from './DiffView'
 import { FileList } from './FileList'
 import { Split } from './Split'
 
@@ -59,15 +59,24 @@ export function ChangesView({ status }: { status: StatusResult }) {
   }
 
   let hunkActions: HunkAction[] | undefined
+  let lineActions: LineAction[] | undefined
   if (selectedFile && selection && diff && selectedFile.status !== '?' && selectedFile.status !== 'U') {
     const path = selectedFile.path
     const hunk = (i: number) => extractHunkPatch(diff, i)
-    hunkActions = selection.staged
-      ? [{ label: t.buttons.unstageHunk, onClick: (i) => withPatch(t.busy.unstageHunk, hunk(i), (p) => git.applyToIndex(repo, p, true)) }]
-      : [
-          { label: t.common.discard, danger: true, onClick: (i) => withPatch(t.busy.discardHunk, hunk(i), (p) => discardHunk(repo, path, p)) },
-          { label: t.buttons.stageHunk, onClick: (i) => withPatch(t.busy.stageHunk, hunk(i), (p) => git.applyToIndex(repo, p, false)) }
-        ]
+    const linesPatch = (sel: ReadonlySet<number>, reverse: boolean) => buildLinesPatch(diff, sel, reverse)
+    if (selection.staged) {
+      hunkActions = [{ label: t.buttons.unstageHunk, onClick: (i) => withPatch(t.busy.unstageHunk, hunk(i), (p) => git.applyToIndex(repo, p, true)) }]
+      lineActions = [{ label: t.buttons.unstageLines, onClick: (s) => withPatch(t.busy.unstageLines, linesPatch(s, true), (p) => git.applyToIndex(repo, p, true)) }]
+    } else {
+      hunkActions = [
+        { label: t.common.discard, danger: true, onClick: (i) => withPatch(t.busy.discardHunk, hunk(i), (p) => discardPart(repo, path, p, t.changes.thisHunk)) },
+        { label: t.buttons.stageHunk, onClick: (i) => withPatch(t.busy.stageHunk, hunk(i), (p) => git.applyToIndex(repo, p, false)) }
+      ]
+      lineActions = [
+        { label: t.common.discard, danger: true, onClick: (s) => withPatch(t.busy.discardLines, linesPatch(s, true), (p) => discardPart(repo, path, p, t.changes.lines(s.size))) },
+        { label: t.buttons.stageLines, onClick: (s) => withPatch(t.busy.stageLines, linesPatch(s, false), (p) => git.applyToIndex(repo, p, false)) }
+      ]
+    }
   }
 
   const unstagedMenu = async (f: FileChange) => {
@@ -177,6 +186,7 @@ export function ChangesView({ status }: { status: StatusResult }) {
         diff={selectedFile ? diff : null}
         title={selectedFile ? `${selectedFile.path}${selection?.staged ? t.changes.stagedSuffix : ''}` : undefined}
         hunkActions={hunkActions}
+        lineActions={lineActions}
         emptyText={status.staged.length + status.unstaged.length ? t.changes.selectFile : t.changes.noChanges}
       />
     </Split>

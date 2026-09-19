@@ -830,6 +830,58 @@ button.icon.inline {
   white-space: nowrap;
 }
 
+.diff {
+  outline: none;
+}
+
+.diff-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 31px;
+}
+
+.diff-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.line-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  font-family: var(--font);
+}
+
+.diff-title .hint {
+  font-family: var(--font);
+  flex: none;
+}
+
+.diff-line.selectable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.diff-line.selectable:hover {
+  filter: brightness(1.25);
+}
+
+.diff-line.selected {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.diff-line.add.selected {
+  background: rgba(70, 180, 90, 0.38);
+}
+
+.diff-line.del.selected {
+  background: rgba(230, 80, 80, 0.38);
+}
+
 .diff-body {
   flex: 1;
   overflow: auto;

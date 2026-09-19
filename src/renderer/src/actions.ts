@@ -75,10 +75,11 @@ export async function discardChanges(repo: string, files: FileChange[]): Promise
   if (ok) await git.discard(repo, files)
 }
 
-export async function discardHunk(repo: string, path: string, patch: string): Promise<void> {
+/** Verwirft einen Teil der Änderungen einer Datei; `what` z. B. t.changes.thisHunk oder t.changes.lines(3). */
+export async function discardPart(repo: string, path: string, patch: string, what: string): Promise<void> {
   const ok = await app.confirm({
-    message: t.dialogs.discardHunk(path),
-    detail: t.dialogs.discardHunkDetail,
+    message: t.dialogs.discardPart(what, path),
+    detail: t.dialogs.discardPartDetail,
     confirmLabel: t.common.discard
   })
   if (ok) await git.discardPatch(repo, patch)

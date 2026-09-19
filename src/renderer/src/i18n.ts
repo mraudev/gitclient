@@ -29,7 +29,9 @@ const de = {
     stageAll: 'Alle stagen',
     unstageAll: 'Alle unstagen',
     stageHunk: 'Hunk stagen',
-    unstageHunk: 'Hunk unstagen'
+    unstageHunk: 'Hunk unstagen',
+    stageLines: 'Zeilen stagen',
+    unstageLines: 'Zeilen unstagen'
   },
   // Anzeige während eine Aktion läuft ("…" wird angehängt)
   busy: {
@@ -41,6 +43,9 @@ const de = {
     stageHunk: 'Hunk stagen',
     unstageHunk: 'Hunk unstagen',
     discardHunk: 'Hunk verwerfen',
+    stageLines: 'Zeilen stagen',
+    unstageLines: 'Zeilen unstagen',
+    discardLines: 'Zeilen verwerfen',
     createBranch: 'Branch erstellen',
     rename: 'Umbenennen',
     delete: 'Löschen',
@@ -119,9 +124,13 @@ const de = {
     amend: 'Letzten Commit ändern (amend)',
     selectFile: 'Datei auswählen, um die Änderungen zu sehen',
     noChanges: 'Keine lokalen Änderungen',
-    changeNotFound: 'Änderung nicht gefunden – bitte neu laden.'
+    changeNotFound: 'Änderung nicht gefunden – bitte neu laden.',
+    lines: (n: number) => (n === 1 ? '1 Zeile' : `${n} Zeilen`),
+    thisHunk: 'diesen Hunk'
   },
   diff: {
+    linesSelected: (lines: string) => `${lines} ausgewählt`,
+    selectHint: 'Zeilen anklicken oder ziehen, um sie einzeln auszuwählen',
     noTextChanges: 'Keine Textänderungen',
     moreLinesHidden: (n: number) => `… ${n} weitere Zeilen ausgeblendet`,
     renamedFrom: (path: string) => `Umbenannt von ${path}`,
@@ -155,8 +164,8 @@ const de = {
     discardFile: (path: string) => `Änderungen an "${path}" verwerfen?`,
     discardFiles: (n: number) => `Änderungen an ${n} Dateien verwerfen?`,
     cannotUndo: 'Das kann nicht rückgängig gemacht werden.',
-    discardHunk: (path: string) => `Diesen Hunk in "${path}" verwerfen?`,
-    discardHunkDetail: 'Die Änderung wird aus der Datei entfernt. Das kann nicht rückgängig gemacht werden.'
+    discardPart: (what: string, path: string) => `${what[0].toUpperCase()}${what.slice(1)} in "${path}" verwerfen?`,
+    discardPartDetail: 'Die Änderung wird aus der Datei entfernt. Das kann nicht rückgängig gemacht werden.'
   }
 }
 
@@ -187,7 +196,9 @@ const en: Messages = {
     stageAll: 'Stage all',
     unstageAll: 'Unstage all',
     stageHunk: 'Stage hunk',
-    unstageHunk: 'Unstage hunk'
+    unstageHunk: 'Unstage hunk',
+    stageLines: 'Stage lines',
+    unstageLines: 'Unstage lines'
   },
   busy: {
     stage: 'Staging',
@@ -198,6 +209,9 @@ const en: Messages = {
     stageHunk: 'Staging hunk',
     unstageHunk: 'Unstaging hunk',
     discardHunk: 'Discarding hunk',
+    stageLines: 'Staging lines',
+    unstageLines: 'Unstaging lines',
+    discardLines: 'Discarding lines',
     createBranch: 'Creating branch',
     rename: 'Renaming',
     delete: 'Deleting',
@@ -276,9 +290,13 @@ const en: Messages = {
     amend: 'Amend last commit',
     selectFile: 'Select a file to see its changes',
     noChanges: 'No local changes',
-    changeNotFound: 'Change not found – please refresh.'
+    changeNotFound: 'Change not found – please refresh.',
+    lines: (n) => (n === 1 ? '1 line' : `${n} lines`),
+    thisHunk: 'this hunk'
   },
   diff: {
+    linesSelected: (lines) => `${lines} selected`,
+    selectHint: 'Click or drag lines to select them individually',
     noTextChanges: 'No text changes',
     moreLinesHidden: (n) => `… ${n} more lines hidden`,
     renamedFrom: (path) => `Renamed from ${path}`,
@@ -312,8 +330,8 @@ const en: Messages = {
     discardFile: (path) => `Discard changes to "${path}"?`,
     discardFiles: (n) => `Discard changes to ${n} files?`,
     cannotUndo: 'This cannot be undone.',
-    discardHunk: (path) => `Discard this hunk in "${path}"?`,
-    discardHunkDetail: 'The change will be removed from the file. This cannot be undone.'
+    discardPart: (what, path) => `Discard ${what} in "${path}"?`,
+    discardPartDetail: 'The change will be removed from the file. This cannot be undone.'
   }
 }
 
