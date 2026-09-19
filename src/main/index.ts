@@ -5,6 +5,8 @@ import type { AppApi } from '../shared/api'
 import type { RepoInfo } from '../shared/types'
 import { gitApi, repoRoot } from './git'
 import { mt, setMainLanguage } from './i18n'
+import iconIco from '../../resources/icon.ico?asset'
+import iconPng from '../../resources/icon.png?asset'
 
 const MAX_RECENT = 15
 const recentFile = () => path.join(app.getPath('userData'), 'recent.json')
@@ -43,6 +45,8 @@ function createWindow(): BrowserWindow {
     show: false,
     backgroundColor: '#1e1f22',
     title: 'Git Client',
+    // Windows nutzt die ICO mit eigenen Kleingrößen (16–32 px), sonst die PNG
+    icon: process.platform === 'win32' ? iconIco : iconPng,
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,

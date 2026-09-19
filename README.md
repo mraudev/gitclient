@@ -9,7 +9,12 @@ npm install
 npm run dev        # Entwicklung mit Hot Reload (F12 = DevTools)
 npm run build      # Produktions-Build nach out/
 npm run typecheck
+npm run icons      # App-Icons aus resources/icon.svg neu erzeugen
 ```
+
+Das App-Icon liegt als SVG in `resources/icon.svg`, dazu `resources/icon-small.svg` mit kräftigeren Linien für 16–32 px.
+`npm run icons` erzeugt daraus `resources/icon.png` (512 px) und `resources/icon.ico` (Windows, 16–256 px).
+Die erzeugten Dateien sind eingecheckt und müssen nur nach Änderungen am SVG neu gebaut werden.
 
 Falls `npm run dev` mit „Electron uninstall“ abbricht, wurde das Electron-Binary nicht geladen:
 `node node_modules/electron/install.js`
@@ -17,6 +22,8 @@ Falls `npm run dev` mit „Electron uninstall“ abbricht, wurde das Electron-Bi
 ## Aufbau
 
 ```
+resources/     App-Icon (SVG-Quellen + erzeugte PNG/ICO)
+scripts/       Hilfsskripte (build-icons.mjs)
 src/
   shared/      Typen + API-Vertrag (GitApi, AppApi) zwischen Main und Renderer
   main/        Electron-Hauptprozess
